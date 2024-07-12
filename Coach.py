@@ -11,7 +11,7 @@ from tkinter import Tk, Canvas, Entry, Text, Button, PhotoImage
 
 
 OUTPUT_PATH = Path(__file__).parent
-ASSETS_PATH = OUTPUT_PATH / Path(r"D:\semi2\Tesis-eSports-2024\assets coach")
+ASSETS_PATH = OUTPUT_PATH / "assets coach"
 
 
 def relative_to_assets(path: str) -> Path:
@@ -26,7 +26,7 @@ window.configure(bg = "#FFFFFF")
 
 canvas = Canvas(
     window,
-    bg = "#FFFFFF",
+    bg = "#E3E3E3",
     height = 1024,
     width = 1440,
     bd = 0,
