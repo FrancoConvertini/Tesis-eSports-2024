@@ -9,11 +9,11 @@ from pathlib import Path
 # Explicit imports to satisfy Flake8
 import subprocess
 from tkinter import Image, Label, Tk, Canvas, Entry, Text, Button, PhotoImage, Toplevel
-from PIL import Image, ImageTk
+
 import time
 
 
-import cv2
+
 #from Perfil import run_perfil  # Asegúrate de que la ruta de importación sea correcta
 
 OUTPUT_PATH = Path(__file__).parent
@@ -206,8 +206,7 @@ def mostrar_camara():
 cronometro_activo = False
 tiempo_inicial = 0
 id_texto_cronometro = None
-contador = 0
-
+contador=0
 def toggle_cronometro():
     global cronometro_activo, tiempo_inicial, contador
     if cronometro_activo:

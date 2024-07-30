@@ -38,7 +38,6 @@ if cnx.is_connected():
 def relative_to_assets(path: str) -> Path:
     return ASSETS_PATH / Path(path)
 
-
 window = Tk()
 window.geometry("1440x1024")
 window.configure(bg = "#2E0935")
@@ -349,7 +348,7 @@ button_3 = Button(
     image=button_image_3,
     borderwidth=0,
     highlightthickness=0,
-    command=lambda: print("button_3 clicked"),
+    command=print("hola"),
     relief="flat"
 )
 button_3.place(
