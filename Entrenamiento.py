@@ -12,6 +12,7 @@ from tkinter import Image, Label, Tk, Canvas, Entry, Text, Button, PhotoImage, T
 from PIL import Image, ImageTk
 import time
 
+
 import cv2
 #from Perfil import run_perfil  # Asegúrate de que la ruta de importación sea correcta
 
@@ -205,16 +206,20 @@ def mostrar_camara():
 cronometro_activo = False
 tiempo_inicial = 0
 id_texto_cronometro = None
+contador = 0
 
 def toggle_cronometro():
-    global cronometro_activo, tiempo_inicial
+    global cronometro_activo, tiempo_inicial, contador
     if cronometro_activo:
         cronometro_activo = False
+        contador= contador+1
+        print(contador)
     else:
         cronometro_activo = True
         tiempo_inicial = int(time.time())
         actualizar_cronometro()
         mostrar_camara()
+        
 
 def actualizar_cronometro():
     if cronometro_activo:

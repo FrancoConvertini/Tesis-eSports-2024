@@ -8,11 +8,32 @@ from pathlib import Path
 # from tkinter import *
 # Explicit imports to satisfy Flake8
 from tkinter import Tk, Canvas, Entry, Text, Button, PhotoImage, Scrollbar, Frame, Label
+##import Entrenamiento
+##contador = Entrenamiento.contador
+
+# Conectar con la base de datos
+
+import mysql.connector
+
+
 
 
 OUTPUT_PATH = Path(__file__).parent
 ASSETS_PATH = OUTPUT_PATH / "assets_perfil"
 
+
+# Establecer una conexión a la base de datos MySQL
+cnx = mysql.connector.connect(
+    host="localhost",
+    user="root",
+    passwd="1234",
+    database="tesis2024",
+    auth_plugin='mysql_native_password'
+)
+
+# Verificar si la conexión es exitosa
+if cnx.is_connected():
+    print("Conectado a la base de datos MySQL")
 
 def relative_to_assets(path: str) -> Path:
     return ASSETS_PATH / Path(path)
@@ -21,6 +42,18 @@ def relative_to_assets(path: str) -> Path:
 window = Tk()
 window.geometry("1440x1024")
 window.configure(bg = "#2E0935")
+
+
+cursor = cnx.cursor()
+idUser =2 
+query = "SELECT name, equipo, edad, videojuego FROM users WHERE idUsers = %s"
+cursor.execute(query, (idUser,))
+resultado = cursor.fetchone()
+nombre = resultado[0]
+equipo = resultado[1]
+edad = resultado[2]
+videojuego = resultado[3]
+
 
 # Crear un Frame para contener el Canvas y la Scrollbar
 main_frame = Frame(window)
@@ -81,6 +114,7 @@ def adjust_inner_canvas_size(event):
 
 sesion= 1
 
+
 def generate_image():
     global image_count , sesion
     base_y_position = 10  # Posición inicial de Y para image_6
@@ -113,7 +147,7 @@ def generate_image():
     inner_canvas.images.append(button_image_6)
 
 
- 
+
 canvas.place(x = 0, y = 0)
 image_image_1 = PhotoImage(
     file=relative_to_assets("image_1.png"))
@@ -168,7 +202,7 @@ canvas.create_text(
     591.0,
     98.0,
     anchor="nw",
-    text="Nombre:",
+    text=f"Nombre: {nombre}",
     fill="#921568",
     font=("Inter", 20 * -1)
 )
@@ -177,7 +211,7 @@ canvas.create_text(
     591.0,
     135.0,
     anchor="nw",
-    text="Edad:",
+    text=f"Edad: {edad}",
     fill="#931668",
     font=("Inter", 20 * -1)
 )
@@ -186,7 +220,7 @@ canvas.create_text(
     591.0,
     170.0,
     anchor="nw",
-    text="Videojuego:",
+    text=f"Videojuego: {videojuego}",
     fill="#931668",
     font=("Inter", 20 * -1)
 )
@@ -195,7 +229,7 @@ canvas.create_text(
     591.0,
     205.0,
     anchor="nw",
-    text="Equipo:",
+    text=f"Equipo:{equipo}",
     fill="#931668",
     font=("Inter", 20 * -1)
 )
@@ -349,41 +383,41 @@ button_4.place(
     height=67.20001220703125
 )
 
-canvas.create_text(
-    680.0,
-    98.0,
-    anchor="nw",
-    text="Franco Convertini",
-    fill="#000000",
-    font=("Inter", 20 * -1)
-)
+##canvas.create_text(
+    ##680.0,
+    ##98.0,
+    ##anchor="nw",
+    ##text="Franco Convertini",
+    ##fill="#000000",
+    ##font=("Inter", 20 * -1)
+##)
 
-canvas.create_text(
-    654.0,
-    135.0,
-    anchor="nw",
-    text="24",
-    fill="#000000",
-    font=("Inter", 20 * -1)
-)
+##canvas.create_text(
+    ##654.0,
+    ##135.0,
+    ##anchor="nw",
+    ##text="24",
+    ##fill="#000000",
+    ##font=("Inter", 20 * -1)
+##)
 
-canvas.create_text(
-    715.0,
-    170.0,
-    anchor="nw",
-    text="League of Legends",
-    fill="#000000",
-    font=("Inter", 20 * -1)
-)
+##canvas.create_text(
+    ##715.0,
+    ##170.0,
+    ##anchor="nw",
+    ##text="League of Legends",
+    ##fill="#000000",
+    ##font=("Inter", 20 * -1)
+##)
 
-canvas.create_text(
-    673.0,
-    205.0,
-    anchor="nw",
-    text="9z",
-    fill="#000000",
-    font=("Inter", 20 * -1)
-)
+##canvas.create_text(
+    ##673.0,
+    ##205.0,
+    ##anchor="nw",
+    ##text="9z",
+    ##fill="#000000",
+    ##font=("Inter", 20 * -1)
+##)
 
 
 # button_image_5 = PhotoImage(
@@ -401,5 +435,11 @@ canvas.create_text(
 #     width=154.0,
 #     height=46.0
 # )
+
+i=0
+##for i in range (contador):
+    ##generate_image()
+    ##print(f"Iteración {i+1}")
+
 window.resizable(False, False)
 window.mainloop()
