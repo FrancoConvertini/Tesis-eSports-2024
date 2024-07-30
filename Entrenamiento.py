@@ -205,11 +205,13 @@ def mostrar_camara():
 cronometro_activo = False
 tiempo_inicial = 0
 id_texto_cronometro = None
-
+contador=0
 def toggle_cronometro():
-    global cronometro_activo, tiempo_inicial
+    global cronometro_activo, tiempo_inicial, contador
     if cronometro_activo:
         cronometro_activo = False
+        contador=contador+1
+        print(contador)
     else:
         cronometro_activo = True
         tiempo_inicial = int(time.time())
