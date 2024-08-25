@@ -45,10 +45,20 @@ def validar_login():
 
     if resultado:
         messagebox.showinfo("Login exitoso", "Bienvenido!")
+        abrir_perfil()
+
     else:
         messagebox.showerror("Error de login", "Usuario o contraseña incorrectos")
 
     cursor.close()
+
+
+def abrir_perfil():
+    from ClassPerfil import PerfilApp
+    window.destroy()
+    new_root = Tk()
+    PerfilApp(new_root)
+    new_root.mainloop()
 
 
 

@@ -1,12 +1,26 @@
 from pathlib import Path
 import subprocess
 from tkinter import Label, Tk, Canvas, Button, PhotoImage
+import cv2  # Add this line to import the cv2 module
 from PIL import Image, ImageTk
 import time
-import cv2
+import mysql.connector
 
 OUTPUT_PATH = Path(__file__).parent
 ASSETS_PATH = OUTPUT_PATH / "assets"
+
+# Establecer una conexión a la base de datos MySQL
+cnx = mysql.connector.connect(
+    host="localhost",
+    user="root",
+    passwd="1234",
+    database="tesis2024",
+    auth_plugin='mysql_native_password'
+)
+
+
+
+
 
 def relative_to_assets(path: str) -> Path:
     return ASSETS_PATH / Path(path)
@@ -83,15 +97,32 @@ class ReconocimientoFacialApp:
         new_root.mainloop()
 
     def toggle_cronometro(self):
+        from ClassPerfil import idUser
         if self.cronometro_activo:
             self.cronometro_activo = False
             self.contador += 1
             print(self.contador)
+            duracion = self.duracion()
+            self.hora_final = time.strftime("%H:%M:%S", time.localtime())
+            print(f"Hora final: {self.hora_final}")
+            cursor = cnx.cursor()
+            query = "INSERT INTO entrenamientos (idUsers ,duracion, hora_inicio, hora_final) VALUES (%s, %s, %s, %s)"
+            cursor.execute(query, (idUser,duracion, self.hora_inicio, self.hora_final))
+            cnx.commit()
+            
         else:
             self.cronometro_activo = True
             self.tiempo_inicial = int(time.time())
+            self.hora_inicio = time.strftime("%H:%M:%S", time.localtime())
+            print(f"Hora inicio: {self.hora_inicio}")
             self.actualizar_cronometro()
             self.mostrar_camara()
+
+    def duracion(self):
+        tiempo_actual = int(time.time())
+        duracion = tiempo_actual - self.tiempo_inicial
+        return duracion
+
 
     def actualizar_cronometro(self):
         if self.cronometro_activo:
@@ -112,6 +143,8 @@ class ReconocimientoFacialApp:
         self.label_camara.configure(image=imgtk)
         if self.cronometro_activo:  # Asegúrate de que la cámara se actualice solo si el cronómetro está activo
             self.label_camara.after(10, self.mostrar_camara)
+
+    
 
 if __name__ == "__main__":
     root = Tk()

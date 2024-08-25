@@ -9,11 +9,11 @@ from pathlib import Path
 # Explicit imports to satisfy Flake8
 import subprocess
 from tkinter import Image, Label, Tk, Canvas, Entry, Text, Button, PhotoImage, Toplevel
-
+from PIL import Image, ImageTk
 import time
 
 
-
+import cv2
 #from Perfil import run_perfil  # Asegúrate de que la ruta de importación sea correcta
 
 OUTPUT_PATH = Path(__file__).parent
@@ -29,9 +29,6 @@ window = Tk()
 window.geometry("1440x1024")
 window.configure(bg = "#2E0935")
 
-def abrir_perfil():
-    subprocess.Popen(["python", "Perfil.py"])
-    window.destroy()
 
 
 canvas = Canvas(

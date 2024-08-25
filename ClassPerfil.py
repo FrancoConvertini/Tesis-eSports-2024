@@ -1,11 +1,62 @@
 from pathlib import Path
 from tkinter import Tk, Canvas, Button, PhotoImage, Scrollbar, Frame, Label
+import mysql.connector
 
 OUTPUT_PATH = Path(__file__).parent
 ASSETS_PATH = OUTPUT_PATH / "assets"
 
 def relative_to_assets(path: str) -> Path:
     return ASSETS_PATH / Path(path)
+
+# Establecer una conexión a la base de datos MySQL
+cnx = mysql.connector.connect(
+    host="localhost",
+    user="root",
+    passwd="1234",
+    database="tesis2024",
+    auth_plugin='mysql_native_password'
+)
+
+# Verificar si la conexión es exitosa
+if cnx.is_connected():
+    print("Conectado a la base de datos MySQL")
+
+
+cursor = cnx.cursor()
+idUser = 2 
+query = "SELECT name, equipo, edad, videojuego FROM users WHERE idUsers = %s"
+cursor.execute(query, (idUser,))
+resultado = cursor.fetchone()
+nombre = resultado[0]
+equipo = resultado[1]
+edad = resultado[2]
+videojuego = resultado[3]
+
+def get_session_data(idUser):
+    cursor2 = cnx.cursor()
+    
+    # Ejecutar la consulta
+    query_sesion = "SELECT hora_inicio, hora_final, duracion FROM entrenamientos WHERE idUsers = %s"
+    print(query_sesion)
+    cursor2.execute(query_sesion, (idUser,))
+    
+    # Obtener los resultados
+    rows = cursor2.fetchall()
+    
+    
+    # Convertir los resultados a una lista de diccionarios
+    session_data = []
+    for row in rows:
+        session_data.append({
+            'hora_inicio': row[0],
+            'hora_fin': row[1],
+            'duracion': row[2]
+        })
+    
+    return session_data
+
+
+
 
 class PerfilApp:
     
@@ -20,12 +71,13 @@ class PerfilApp:
         self.contador = 0
        
         self.setup_ui()
-        self.entrenamientos()
-    def entrenamientos(self):
-        i=0
-        while i < self.partidas:
-            self.generate_image()
-            i+=1
+        self.generate_image(idUser)
+        #self.entrenamientos()
+    #def entrenamientos(self):
+        #i=0
+        #while idUser < self.partidas:
+            #self.generate_image()
+            #i+=1
             
     def setup_ui(self):
         # Crear un Frame para contener el Canvas y la Scrollbar
@@ -97,10 +149,10 @@ class PerfilApp:
         self.canvas.create_image(173.0, 162.0, image=self.image_image_5)
 
         self.canvas.create_text(817.0, 41.0, anchor="nw", text="Perfil del jugador", fill="#931668", font=("Inter", 20 * -1))
-        self.canvas.create_text(591.0, 98.0, anchor="nw", text="Nombre:", fill="#921568", font=("Inter", 20 * -1))
-        self.canvas.create_text(591.0, 135.0, anchor="nw", text="Edad:", fill="#931668", font=("Inter", 20 * -1))
-        self.canvas.create_text(591.0, 170.0, anchor="nw", text="Videojuego:", fill="#931668", font=("Inter", 20 * -1))
-        self.canvas.create_text(591.0, 205.0, anchor="nw", text="Equipo:", fill="#931668", font=("Inter", 20 * -1))
+        self.canvas.create_text(591.0, 98.0, anchor="nw", text=f"Nombre: {nombre}", fill="#921568", font=("Inter", 20 * -1))
+        self.canvas.create_text(591.0, 135.0, anchor="nw", text=f"Edad: {edad}", fill="#931668", font=("Inter", 20 * -1))
+        self.canvas.create_text(591.0, 170.0, anchor="nw", text=f"Videojuego: {videojuego}", fill="#931668", font=("Inter", 20 * -1))
+        self.canvas.create_text(591.0, 205.0, anchor="nw", text=f"Equipo: {equipo}", fill="#931668", font=("Inter", 20 * -1))
 
         self.canvas.create_rectangle(383.0, 286.0, 1359.9999389648438, 289.0123710033819, fill="#000000", outline="")
 
@@ -153,32 +205,37 @@ class PerfilApp:
         ReconocimientoFacialApp(new_root, contador)
         new_root.mainloop()
 
-    def generate_image(self):
+    def generate_image(self, idUser):
         base_y_position = 10
         base_x_position = 10
         y_increment = 100
-        y_position = base_y_position + (self.image_count * y_increment)
-        new_image = PhotoImage(file=relative_to_assets("rectanguloNegroPerfil.png"))
-        self.inner_canvas.create_image(base_x_position, y_position, image=new_image, anchor="nw")
-        self.image_count += 1
-        self.inner_canvas.images.append(new_image)
-        self.inner_canvas.bind("<Configure>", self.adjust_inner_canvas_size)
 
-        # Generar nombre de la sesión
-        self.inner_canvas.create_text(base_x_position + 100, y_position + 30, text="Sesion " + str(self.sesion), font=("Roboto", 18, "bold"), fill="white")
-        self.sesion += 1
+        # Obtener los datos de las sesiones
+        session_data = get_session_data(idUser)
 
-        # Generar hora de inicio
-        self.inner_canvas.create_text(base_x_position + 300, y_position + 30, text="xx:xx", font=("Roboto", 18, "bold"), fill="white")
+        for session in session_data:
+            y_position = base_y_position + (self.image_count * y_increment)
+            new_image = PhotoImage(file=relative_to_assets("rectanguloNegroPerfil.png"))
+            self.inner_canvas.create_image(base_x_position, y_position, image=new_image, anchor="nw")
+            self.image_count += 1
+            self.inner_canvas.images.append(new_image)
+            self.inner_canvas.bind("<Configure>", self.adjust_inner_canvas_size)
 
-        # Generar hora de fin
-        self.inner_canvas.create_text(base_x_position + 500, y_position + 30, text="xx:xx", font=("Roboto", 18, "bold"), fill="white")
+            # Generar nombre de la sesión
+            self.inner_canvas.create_text(base_x_position + 100, y_position + 30, text="Sesion " + str(self.sesion), font=("Roboto", 18, "bold"), fill="white")
+            self.sesion += 1
 
-        # Generar botones
-        button_image_6 = PhotoImage(file=relative_to_assets("Detalles.png"))
-        button_6 = Button(self.inner_canvas, image=button_image_6, borderwidth=0, highlightthickness=0, relief="flat")
-        self.inner_canvas.create_window(830, y_position + 8, anchor="nw", window=button_6, width=154.0, height=46.0)
-        self.inner_canvas.images.append(button_image_6)
+            # Generar hora de inicio
+            self.inner_canvas.create_text(base_x_position + 300, y_position + 30, text=session['hora_inicio'], font=("Roboto", 18, "bold"), fill="white")
+
+            # Generar hora de fin
+            self.inner_canvas.create_text(base_x_position + 500, y_position + 30, text=session['hora_fin'], font=("Roboto", 18, "bold"), fill="white")
+
+            # Generar botones
+            button_image_6 = PhotoImage(file=relative_to_assets("Detalles.png"))
+            button_6 = Button(self.inner_canvas, image=button_image_6, borderwidth=0, highlightthickness=0, relief="flat")
+            self.inner_canvas.create_window(830, y_position + 8, anchor="nw", window=button_6, width=154.0, height=46.0)
+            self.inner_canvas.images.append(button_image_6)
 
     def adjust_inner_canvas_size(self, event):
         self.inner_canvas.configure(scrollregion=self.inner_canvas.bbox("all"))
