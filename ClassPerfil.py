@@ -23,7 +23,7 @@ if cnx.is_connected():
 
 
 cursor = cnx.cursor()
-idUser = 2 
+idUser = 2
 query = "SELECT name, equipo, edad, videojuego FROM users WHERE idUsers = %s"
 cursor.execute(query, (idUser,))
 resultado = cursor.fetchone()
@@ -145,7 +145,8 @@ class PerfilApp:
         self.image_image_4 = PhotoImage(file=relative_to_assets("fotoUser.png"))
         self.canvas.create_image(477.0, 162.0, image=self.image_image_4)
 
-        self.image_image_5 = PhotoImage(file=relative_to_assets("Ojo.png"))
+        
+        self.image_image_5 = PhotoImage(file=relative_to_assets("logo.png"))
         self.canvas.create_image(173.0, 162.0, image=self.image_image_5)
 
         self.canvas.create_text(817.0, 41.0, anchor="nw", text="Perfil del jugador", fill="#931668", font=("Inter", 20 * -1))
@@ -212,8 +213,10 @@ class PerfilApp:
 
         # Obtener los datos de las sesiones
         session_data = get_session_data(idUser)
+        print(idUser)
 
         for session in session_data:
+            print('hola')
             y_position = base_y_position + (self.image_count * y_increment)
             new_image = PhotoImage(file=relative_to_assets("rectanguloNegroPerfil.png"))
             self.inner_canvas.create_image(base_x_position, y_position, image=new_image, anchor="nw")

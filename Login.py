@@ -143,29 +143,29 @@ button_1.place(
     height=48.09337615966797
 )
 
-canvas.create_text(
-    1212.0,
-    658.0,
-    anchor="nw",
-    text="Registrate",
-    fill="#2C89F7",
-    font=("Inter", 16 * -1)
-)
+#canvas.create_text(
+    #1212.0,
+    #658.0,
+    #anchor="nw",
+    #text="Registrate",
+    #fill="#2C89F7",
+    #font=("Inter", 16 * -1)
+#)
 
-canvas.create_text(
-    1046.0,
-    658.0,
-    anchor="nw",
-    text="No estas registrado?",
-    fill="#313131",
-    font=("Inter", 16 * -1)
-)
+#canvas.create_text(
+    #1046.0,
+    #658.0,
+    #anchor="nw",
+    #text="No estas registrado?",
+    #fill="#313131",
+    #font=("Inter", 16 * -1)
+#)
 
 image_image_2 = PhotoImage(
-    file=relative_to_assets("image_2.png"))
+    file=relative_to_assets("logo.png"))
 image_2 = canvas.create_image(
     1161.0,
-    351.0,
+    300.0,
     image=image_image_2
 )
 
@@ -178,10 +178,18 @@ image_3 = canvas.create_image(
 )
 
 canvas.create_text(
-    166.0,
+    120.0,
     342.0,
     anchor="nw",
-    text="Pajeate Mejor con e-Motion",
+    text="Cuida tu salud y mejora tu rendimiento",
+    fill="#FFFFFF",
+    font=("Roboto", 36 * -1)
+)
+canvas.create_text(
+    310.0,
+    442.0,
+    anchor="nw",
+    text="con e-Motion",
     fill="#FFFFFF",
     font=("Roboto", 36 * -1)
 )
