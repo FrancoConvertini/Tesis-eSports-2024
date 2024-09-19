@@ -6,12 +6,12 @@ from pathlib import Path
 
 # from tkinter import *
 # Explicit imports to satisfy Flake8
-from tkinter import Tk, Canvas, Entry, Text, Button, PhotoImage
+from tkinter import Tk, Canvas, Entry, Text, Button, PhotoImage, Toplevel
 import mysql.connector
 from tkinter import messagebox
 
 OUTPUT_PATH = Path(__file__).parent
-ASSETS_PATH = OUTPUT_PATH / Path(r"D:\Test TK\build\assets\frame0")
+ASSETS_PATH = OUTPUT_PATH / "assets login"
 
 
 
@@ -22,11 +22,10 @@ def relative_to_assets(path: str) -> Path:
 
 # Establecer una conexión a la base de datos MySQL
 cnx = mysql.connector.connect(
-    host="localhost",
-    user="root",
-    passwd="1234",
+    host="database-1.cluster-c8t9myimiwmo.us-east-1.rds.amazonaws.com",
+    user="admin",
+    passwd="asdasd123",
     database="tesis2024",
-    auth_plugin='mysql_native_password'
 )
 
 # Verificar si la conexión es exitosa
@@ -39,13 +38,13 @@ def validar_login():
     password = entry_2.get()
 
     cursor = cnx.cursor()
-    query = "SELECT * FROM users WHERE user = %s AND password = %s"
+    query = "SELECT * FROM users WHERE idUsers = %s AND password = %s"
     cursor.execute(query, (user, password))
     resultado = cursor.fetchone()
 
     if resultado:
         messagebox.showinfo("Login exitoso", "Bienvenido!")
-        abrir_perfil()
+        abrir_perfil(user)
 
     else:
         messagebox.showerror("Error de login", "Usuario o contraseña incorrectos")
@@ -53,11 +52,34 @@ def validar_login():
     cursor.close()
 
 
-def abrir_perfil():
-    from ClassPerfil import PerfilApp
+def abrir_perfil(user):
+    cursor = cnx.cursor()
+    idUser = user
+    userLogeado = user
+    userPerfil = user
+    query = "SELECT name, equipo, edad, videojuego, rol FROM users WHERE idUsers = %s"
+    cursor.execute(query, (idUser,))
+    resultado = cursor.fetchone()
+    rol=resultado[4]
+    if rol=="Player":
+        from ClassPerfil import PerfilApp
+        window.destroy()
+        new_root = Tk()
+        PerfilApp(new_root, userLogeado, userPerfil)
+        new_root.mainloop()
+    else:
+        from ClassCoach import CoachApp
+        print("en login abrir coach con userLogeado: ", userLogeado, " y userPerfil: ", userPerfil)
+        window.destroy()
+        new_root = Tk()
+        CoachApp(new_root, userLogeado, userPerfil)
+        new_root.mainloop()
+
+def abrir_coach():
+    from coachprueba import CoachApp
     window.destroy()
     new_root = Tk()
-    PerfilApp(new_root)
+    CoachApp(new_root)
     new_root.mainloop()
 
 

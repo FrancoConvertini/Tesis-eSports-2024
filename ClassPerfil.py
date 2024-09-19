@@ -9,58 +9,12 @@ def relative_to_assets(path: str) -> Path:
     return ASSETS_PATH / Path(path)
 
 # Establecer una conexión a la base de datos MySQL
-cnx = mysql.connector.connect(
-    host="localhost",
-    user="root",
-    passwd="1234",
-    database="tesis2024",
-    auth_plugin='mysql_native_password'
-)
-
-# Verificar si la conexión es exitosa
-if cnx.is_connected():
-    print("Conectado a la base de datos MySQL")
-
-
-cursor = cnx.cursor()
-idUser = 2
-query = "SELECT name, equipo, edad, videojuego FROM users WHERE idUsers = %s"
-cursor.execute(query, (idUser,))
-resultado = cursor.fetchone()
-nombre = resultado[0]
-equipo = resultado[1]
-edad = resultado[2]
-videojuego = resultado[3]
-
-def get_session_data(idUser):
-    cursor2 = cnx.cursor()
-    
-    # Ejecutar la consulta
-    query_sesion = "SELECT hora_inicio, hora_final, duracion FROM entrenamientos WHERE idUsers = %s"
-    print(query_sesion)
-    cursor2.execute(query_sesion, (idUser,))
-    
-    # Obtener los resultados
-    rows = cursor2.fetchall()
-    
-    
-    # Convertir los resultados a una lista de diccionarios
-    session_data = []
-    for row in rows:
-        session_data.append({
-            'hora_inicio': row[0],
-            'hora_fin': row[1],
-            'duracion': row[2]
-        })
-    
-    return session_data
-
 
 
 
 class PerfilApp:
     
-    def __init__(self, root):
+    def __init__(self, root, userLogeado, userPerfil):
         self.root = root
         self.root.geometry("1440x1024")
         self.root.configure(bg="#2E0935")
@@ -69,9 +23,84 @@ class PerfilApp:
         self.sesion = 1
         self.partidas=3
         self.contador = 0
+        self.show_button_3 = True
+        self.userLogeado=userLogeado
+        self.userPerfil=userPerfil
+        print("en perfil con userLogeado: ", userLogeado, " y userPerfil: ", userPerfil)
        
-        self.setup_ui()
-        self.generate_image(idUser)
+        cnx = mysql.connector.connect(
+            #host="database-1.cluster-c8t9myimiwmo.us-east-1.rds.amazonaws.com",
+            #user="admin",
+            #passwd="asdasd123",
+            #database="tesis2024",
+            host="localhost",
+    user="root",
+    passwd="1234",
+    database="tesis2024",
+    auth_plugin='mysql_native_password'
+        )
+
+# Verificar si la conexión es exitosa
+        if cnx.is_connected():
+            print("Conectado a la base de datos MySQL")
+                
+        cursor = cnx.cursor()
+        idUser = userLogeado
+        query = "SELECT name, equipo, edad, videojuego, rol FROM users WHERE idUsers = %s"
+        cursor.execute(query, (idUser,))
+        resultado = cursor.fetchone()
+        self.nombre = resultado[0]
+        self.equipo = resultado[1]
+        self.edad = resultado[2]
+        self.videojuego = resultado[3]
+        rol= resultado[4]
+        if rol=="Player":
+            print("dentro del if con idUser2", idUser)
+            self.show_button_3 = False
+            self.setup_ui()
+            self.generate_image(idUser)
+            
+        else:
+            print("dentro del if", userPerfil)
+            self.setup_ui()
+            self.generate_image(userPerfil)
+           
+
+    
+        
+    
+    def get_session_data(self, idUser):
+        cnx = mysql.connector.connect(
+            host="localhost",
+            user="root",
+            passwd="1234",
+            database="tesis2024",
+            auth_plugin='mysql_native_password'
+        )
+        cursor2 = cnx.cursor()
+        # Ejecutar la consulta
+        query_sesion = "SELECT hora_inicio, hora_final, duracion FROM entrenamientos WHERE idUsers = %s"
+        print(query_sesion)
+        cursor2.execute(query_sesion, (idUser,))
+            
+         # Obtener los resultados
+        rows = cursor2.fetchall()
+            
+            
+        # Convertir los resultados a una lista de diccionarios
+        session_data = []
+        for row in rows:
+            session_data.append({
+                    'hora_inicio': row[0],
+                    'hora_fin': row[1],
+                    'duracion': row[2]
+                })
+            
+        return session_data    
+
+
+
+       
         #self.entrenamientos()
     #def entrenamientos(self):
         #i=0
@@ -150,10 +179,10 @@ class PerfilApp:
         self.canvas.create_image(173.0, 162.0, image=self.image_image_5)
 
         self.canvas.create_text(817.0, 41.0, anchor="nw", text="Perfil del jugador", fill="#931668", font=("Inter", 20 * -1))
-        self.canvas.create_text(591.0, 98.0, anchor="nw", text=f"Nombre: {nombre}", fill="#921568", font=("Inter", 20 * -1))
-        self.canvas.create_text(591.0, 135.0, anchor="nw", text=f"Edad: {edad}", fill="#931668", font=("Inter", 20 * -1))
-        self.canvas.create_text(591.0, 170.0, anchor="nw", text=f"Videojuego: {videojuego}", fill="#931668", font=("Inter", 20 * -1))
-        self.canvas.create_text(591.0, 205.0, anchor="nw", text=f"Equipo: {equipo}", fill="#931668", font=("Inter", 20 * -1))
+        self.canvas.create_text(591.0, 98.0, anchor="nw", text=f"Nombre: {self.nombre}", fill="#921568", font=("Inter", 20 * -1))
+        self.canvas.create_text(591.0, 135.0, anchor="nw", text=f"Edad: {self.edad}", fill="#931668", font=("Inter", 20 * -1))
+        self.canvas.create_text(591.0, 170.0, anchor="nw", text=f"Videojuego: {self.videojuego}", fill="#931668", font=("Inter", 20 * -1))
+        self.canvas.create_text(591.0, 205.0, anchor="nw", text=f"Equipo: {self.equipo}", fill="#931668", font=("Inter", 20 * -1))
 
         self.canvas.create_rectangle(383.0, 286.0, 1359.9999389648438, 289.0123710033819, fill="#000000", outline="")
 
@@ -182,41 +211,56 @@ class PerfilApp:
         self.button_1.place(x=81.0, y=349.0, width=183.9990234375, height=59.13140869140625)
 
         self.button_image_2 = PhotoImage(file=relative_to_assets("Entrenar.png"))
-        self.button_2 = Button(image=self.button_image_2, borderwidth=0, highlightthickness=0, command=lambda: self.switch_to_entrenamiento (self.contador), relief="flat")
+        self.button_2 = Button(image=self.button_image_2, borderwidth=0, highlightthickness=0, command=lambda: self.switch_to_entrenamiento (self.userLogeado, self.userPerfil), relief="flat")
         self.button_2.place(x=81.0, y=428.0, width=183.9990234375, height=59.13140869140625)
 
-        self.button_image_3 = PhotoImage(file=relative_to_assets("MiEquipo.png"))
-        self.button_3 = Button(image=self.button_image_3, borderwidth=0, highlightthickness=0, command=self.sumar, relief="flat")
-        self.button_3.place(x=81.0, y=512.0, width=183.9990234375, height=59.13140869140625)
+        if self.show_button_3==True:
+            self.button_image_3 = PhotoImage(file=relative_to_assets("MiEquipo.png"))
+            self.button_3 = Button(image=self.button_image_3, borderwidth=0, highlightthickness=0, command=lambda: self.switch_to_coach(self.userLogeado, self.userPerfil), relief="flat")
+            self.button_3.place(x=81.0, y=512.0, width=183.9990234375, height=59.13140869140625)
+    
 
         self.button_image_4 = PhotoImage(file=relative_to_assets("Apagar.png"))
-        self.button_4 = Button(image=self.button_image_4, borderwidth=0, highlightthickness=0, command=lambda: print("button_4 clicked"), relief="flat")
+        self.button_4 = Button(image=self.button_image_4, borderwidth=0, highlightthickness=0, command=lambda: self.switch_to_login(), relief="flat")
         self.button_4.place(x=142.0, y=912.0, width=60.1756591796875, height=67.20001220703125)
-    def sumar(self):
-        self.contador+=1
-        print(self.contador)
+
+    def switch_to_login(self):
+        print("saliendo del login")
+        from ClassLogin import LoginApp
+        self.root.destroy()
+        new_root = Tk()
+        LoginApp(new_root)
+        new_root.mainloop()
+
+    def switch_to_coach(self, userLogeado, userPerfil):
+        
+        from ClassCoach import CoachApp
+        self.root.destroy()
+        new_root = Tk()
+        CoachApp(new_root, userLogeado, userPerfil)
+        new_root.mainloop()
         
 
 
-    def switch_to_entrenamiento(self, contador):
+    def switch_to_entrenamiento(self, userLogeado, userPerfil):
         from ClassEntrenamiento import ReconocimientoFacialApp
-        print("entre")
         self.root.destroy()
         new_root = Tk()
-        ReconocimientoFacialApp(new_root, contador)
+        ReconocimientoFacialApp(new_root, userLogeado, userPerfil)
         new_root.mainloop()
 
+    def create_button_command(self, session_name):
+        return lambda: print(f"Nombre de la sesión: {session_name}")
+    
     def generate_image(self, idUser):
         base_y_position = 10
         base_x_position = 10
         y_increment = 100
 
         # Obtener los datos de las sesiones
-        session_data = get_session_data(idUser)
-        print(idUser)
+        session_data = self.get_session_data(idUser)
 
         for session in session_data:
-            print('hola')
             y_position = base_y_position + (self.image_count * y_increment)
             new_image = PhotoImage(file=relative_to_assets("rectanguloNegroPerfil.png"))
             self.inner_canvas.create_image(base_x_position, y_position, image=new_image, anchor="nw")
@@ -225,6 +269,7 @@ class PerfilApp:
             self.inner_canvas.bind("<Configure>", self.adjust_inner_canvas_size)
 
             # Generar nombre de la sesión
+            session_name = f"Sesion {self.sesion}"
             self.inner_canvas.create_text(base_x_position + 100, y_position + 30, text="Sesion " + str(self.sesion), font=("Roboto", 18, "bold"), fill="white")
             self.sesion += 1
 
@@ -236,7 +281,7 @@ class PerfilApp:
 
             # Generar botones
             button_image_6 = PhotoImage(file=relative_to_assets("Detalles.png"))
-            button_6 = Button(self.inner_canvas, image=button_image_6, borderwidth=0, highlightthickness=0, relief="flat")
+            button_6 = Button(self.inner_canvas, image=button_image_6, borderwidth=0, highlightthickness=0, relief="flat", command=self.create_button_command(session_name))
             self.inner_canvas.create_window(830, y_position + 8, anchor="nw", window=button_6, width=154.0, height=46.0)
             self.inner_canvas.images.append(button_image_6)
 
