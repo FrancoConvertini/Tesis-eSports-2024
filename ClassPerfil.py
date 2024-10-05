@@ -1,6 +1,7 @@
 from pathlib import Path
 from tkinter import Tk, Canvas, Button, PhotoImage, Scrollbar, Frame, Label
 import mysql.connector
+import os
 
 OUTPUT_PATH = Path(__file__).parent
 ASSETS_PATH = OUTPUT_PATH / "assets"
@@ -249,6 +250,16 @@ class PerfilApp:
         ReconocimientoFacialApp(new_root, userLogeado, userPerfil)
         new_root.mainloop()
 
+    def switch_to_resumen(self):
+        from ClassResumen import ResumenApp
+        self.root.destroy()
+        new_root = Tk()
+        ResumenApp(new_root)
+        new_root.mainloop()
+
+    def navigate_to_resumen(self, event=None):
+        os.system('python Resumen.py')
+
     def create_button_command(self, session_name):
         return lambda: print(f"Nombre de la sesión: {session_name}")
     
@@ -281,7 +292,7 @@ class PerfilApp:
 
             # Generar botones
             button_image_6 = PhotoImage(file=relative_to_assets("Detalles.png"))
-            button_6 = Button(self.inner_canvas, image=button_image_6, borderwidth=0, highlightthickness=0, relief="flat", command=self.create_button_command(session_name))
+            button_6 = Button(self.inner_canvas, image=button_image_6, borderwidth=0, highlightthickness=0, relief="flat", command=self.navigate_to_resumen)
             self.inner_canvas.create_window(830, y_position + 8, anchor="nw", window=button_6, width=154.0, height=46.0)
             self.inner_canvas.images.append(button_image_6)
 

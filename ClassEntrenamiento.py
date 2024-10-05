@@ -5,6 +5,13 @@ import cv2  # Add this line to import the cv2 module
 from PIL import Image, ImageTk
 import time
 import mysql.connector
+import cv2
+import mediapipe as mp 
+import csv
+import os
+import numpy as np
+import pickle
+import pandas as pd
 
 OUTPUT_PATH = Path(__file__).parent
 ASSETS_PATH = OUTPUT_PATH / "assets"
@@ -23,7 +30,12 @@ cnx = mysql.connector.connect(
 )
 
 
+mp_drawing = mp.solutions.drawing_utils
+mp_holistic = mp.solutions.holistic
 
+with open('body_language.pkl', 'rb') as f:
+    model = pickle.load(f)
+#print(model)
 
 
 def relative_to_assets(path: str) -> Path:
@@ -137,13 +149,55 @@ class ReconocimientoFacialApp:
 
     def mostrar_camara(self):
         _, frame = self.cap.read()
-        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        frame_resized = cv2.resize(frame, (1014, 604))  # Cambia 320x240 al tamaño deseado
+        
+        # Convertir el frame de BGR a RGB para Mediapipe
+        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+        # Procesar la imagen con Mediapipe
+        with mp_holistic.Holistic(min_detection_confidence=0.5, min_tracking_confidence=0.5) as holistic:
+            results = holistic.process(frame_rgb)
+
+            # Dibujar los puntos clave en la cara, manos y cuerpo usando Mediapipe
+            mp_drawing.draw_landmarks(frame, results.face_landmarks, mp_holistic.FACEMESH_TESSELATION, mp_drawing.DrawingSpec(color=(80,110,10), thickness=1, circle_radius=1),  mp_drawing.DrawingSpec(color=(80,256,121), thickness=1, circle_radius=1))
+            mp_drawing.draw_landmarks(frame, results.pose_landmarks, mp_holistic.POSE_CONNECTIONS,  mp_drawing.DrawingSpec(color=(245,117,66), thickness=2, circle_radius=4),
+                                 mp_drawing.DrawingSpec(color=(245,66,230), thickness=2, circle_radius=2))
+            mp_drawing.draw_landmarks(frame, results.left_hand_landmarks, mp_holistic.HAND_CONNECTIONS, mp_drawing.DrawingSpec(color=(121,22,76), thickness=2, circle_radius=4),
+                                 mp_drawing.DrawingSpec(color=(121,44,250), thickness=2, circle_radius=2))
+            mp_drawing.draw_landmarks(frame, results.right_hand_landmarks, mp_holistic.HAND_CONNECTIONS, mp_drawing.DrawingSpec(color=(80,22,10), thickness=2, circle_radius=4),
+                                 mp_drawing.DrawingSpec(color=(80,44,121), thickness=2, circle_radius=2))
+
+            # Exportar coordenadas y realizar predicciones si hay landmarks
+            try:
+                pose = results.pose_landmarks.landmark
+                face = results.face_landmarks.landmark
+
+                # Concatenar las coordenadas del cuerpo y la cara
+                pose_row = list(np.array([[lmk.x, lmk.y, lmk.z, lmk.visibility] for lmk in pose]).flatten())
+                face_row = list(np.array([[lmk.x, lmk.y, lmk.z, lmk.visibility] for lmk in face]).flatten())
+
+                row = pose_row + face_row
+
+                # Realizar predicción
+                X = pd.DataFrame([row])
+                body_language_class = model.predict(X)[0]
+                body_language_prob = model.predict_proba(X)[0]
+
+                # Mostrar la clase detectada en el frame
+                cv2.putText(frame, f'{body_language_class} ({max(body_language_prob):.2f})', (10, 50),
+                            cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
+            except Exception as e:
+                print(f"Error procesando las landmarks: {e}")
+
+        # Convertir el frame de nuevo a RGB para mostrarlo en Tkinter
+        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        frame_resized = cv2.resize(frame_rgb, (1014, 604))  # Ajustar el tamaño
+
         img = Image.fromarray(frame_resized)
         imgtk = ImageTk.PhotoImage(image=img)
         self.label_camara.imgtk = imgtk
         self.label_camara.configure(image=imgtk)
-        if self.cronometro_activo:  # Asegúrate de que la cámara se actualice solo si el cronómetro está activo
+
+        if self.cronometro_activo:
             self.label_camara.after(10, self.mostrar_camara)
 
     
