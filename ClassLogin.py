@@ -63,6 +63,7 @@ class LoginApp:
             fill="#FFFFFF",
             font=("Roboto", 36 * -1)
         )
+        
         self.canvas.create_text(
             310.0,
             442.0,

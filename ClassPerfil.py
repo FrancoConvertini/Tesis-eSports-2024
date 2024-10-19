@@ -1,7 +1,8 @@
 from pathlib import Path
-from tkinter import Tk, Canvas, Button, PhotoImage, Scrollbar, Frame, Label
+from tkinter import Tk, Canvas, Button, PhotoImage, Scrollbar, Frame, Label, Toplevel
 import mysql.connector
 import os
+import subprocess
 
 OUTPUT_PATH = Path(__file__).parent
 ASSETS_PATH = OUTPUT_PATH / "assets"
@@ -80,7 +81,7 @@ class PerfilApp:
         )
         cursor2 = cnx.cursor()
         # Ejecutar la consulta
-        query_sesion = "SELECT hora_inicio, hora_final, duracion FROM entrenamientos WHERE idUsers = %s"
+        query_sesion = "SELECT hora_inicio, hora_final, duracion, idSesion, idSesionUsuario FROM entrenamientos WHERE idUsers = %s"
         print(query_sesion)
         cursor2.execute(query_sesion, (idUser,))
             
@@ -94,7 +95,9 @@ class PerfilApp:
             session_data.append({
                     'hora_inicio': row[0],
                     'hora_fin': row[1],
-                    'duracion': row[2]
+                    'duracion': row[2],
+                    'idSesion': row[3],
+                    'idSesionUsuario': row[4]
                 })
             
         return session_data    
@@ -250,15 +253,10 @@ class PerfilApp:
         ReconocimientoFacialApp(new_root, userLogeado, userPerfil)
         new_root.mainloop()
 
-    def switch_to_resumen(self):
-        from ClassResumen import ResumenApp
-        self.root.destroy()
-        new_root = Tk()
-        ResumenApp(new_root)
-        new_root.mainloop()
+    
 
-    def navigate_to_resumen(self, event=None):
-        os.system('python Resumen.py')
+    def navigate_to_resumen(self, idSesionUsuario):
+        subprocess.run(['python', 'ClassResumen.py', str(idSesionUsuario)])
 
     def create_button_command(self, session_name):
         return lambda: print(f"Nombre de la sesión: {session_name}")
@@ -281,7 +279,7 @@ class PerfilApp:
 
             # Generar nombre de la sesión
             session_name = f"Sesion {self.sesion}"
-            self.inner_canvas.create_text(base_x_position + 100, y_position + 30, text="Sesion " + str(self.sesion), font=("Roboto", 18, "bold"), fill="white")
+            self.inner_canvas.create_text(base_x_position + 100, y_position + 30, text=session['idSesionUsuario'], font=("Roboto", 18, "bold"), fill="white")
             self.sesion += 1
 
             # Generar hora de inicio
@@ -291,8 +289,10 @@ class PerfilApp:
             self.inner_canvas.create_text(base_x_position + 500, y_position + 30, text=session['hora_fin'], font=("Roboto", 18, "bold"), fill="white")
 
             # Generar botones
+            idSesionUsuario = session['idSesionUsuario']
+            print("idSesionUsuario: ", idSesionUsuario)
             button_image_6 = PhotoImage(file=relative_to_assets("Detalles.png"))
-            button_6 = Button(self.inner_canvas, image=button_image_6, borderwidth=0, highlightthickness=0, relief="flat", command=self.navigate_to_resumen)
+            button_6 = Button(self.inner_canvas, image=button_image_6, borderwidth=0, highlightthickness=0,  command=lambda idSesionUsuario=idSesionUsuario: self.navigate_to_resumen(idSesionUsuario), relief="flat")
             self.inner_canvas.create_window(830, y_position + 8, anchor="nw", window=button_6, width=154.0, height=46.0)
             self.inner_canvas.images.append(button_image_6)
 

@@ -53,11 +53,13 @@ class ReconocimientoFacialApp:
         self.tiempo_inicial = 0
         self.contador = 0
         self.user = "maspi@gmail.com"
-        
+    
+        self.ultima_sesion = 0
+        print(self.ultima_sesion)
 
         self.setup_ui()
         self.cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
-    
+        self.idSesion = None
     def setup_ui(self):
         self.canvas = Canvas(
             self.root,
@@ -73,17 +75,18 @@ class ReconocimientoFacialApp:
         self.image_image_1 = PhotoImage(file=relative_to_assets("fondo.png"))
         self.canvas.create_image(720.0, 512.0, image=self.image_image_1)
 
-        self.canvas.create_rectangle(343.0, 27.0, 1402.0, 998.0, fill="#E3E3E3", outline="")
-        self.canvas.create_text(666.0, 233.0, anchor="nw", text="RECONOCIMIENTO FACIAL", fill="#000000", font=("Inter", 12 * -1))
+        self.image_image_3 = PhotoImage(file=relative_to_assets("CuadradoMedio.png"))
+        self.canvas.create_image(867.0, 512.0, image=self.image_image_3)
         self.canvas.create_rectangle(366.0, 53.0, 1380.0, 657.0, fill="#888181", outline="")
 
         self.button_image_1 = PhotoImage(file=relative_to_assets("Play.png"))
         self.button_1 = Button(image=self.button_image_1, borderwidth=0, highlightthickness=0, command=self.toggle_cronometro, relief="flat")
         self.button_1.place(x=820.0, y=826.0, width=105.0, height=112.0)
         
-        self.canvas.create_rectangle(42.0, 27.0, 304.0, 998.0, fill="#E3E3E3", outline="")
+        self.image_image_99 = PhotoImage(file=relative_to_assets("MenuIzq.png"))
+        self.canvas.create_image(172.0, 512.0, image=self.image_image_99)
         
-        self.image_image_2 = PhotoImage(file=relative_to_assets("Ojo.png"))
+        self.image_image_2 = PhotoImage(file=relative_to_assets("logo.png"))
         self.canvas.create_image(174.0, 162.0, image=self.image_image_2)
 
         self.button_image_2 = PhotoImage(file=relative_to_assets("Perfil.png"))
@@ -109,29 +112,45 @@ class ReconocimientoFacialApp:
         new_root = Tk()
         PerfilApp(new_root, userLogeado, userPerfil)
         new_root.mainloop()
+  
+    
 
     def toggle_cronometro(self):
-
         if self.cronometro_activo:
+            # Al finalizar el entrenamiento
             self.cronometro_activo = False
             self.contador += 1
-            print(self.contador)
             duracion = self.duracion()
             self.hora_final = time.strftime("%H:%M:%S", time.localtime())
             print(f"Hora final: {self.hora_final}")
             cursor = cnx.cursor()
-            query = "INSERT INTO entrenamientos (idUsers ,duracion, hora_inicio, hora_final) VALUES (%s, %s, %s, %s)"
-            cursor.execute(query, (self.userLogeado, duracion, self.hora_inicio, self.hora_final))
+            query = "UPDATE entrenamientos SET duracion = %s, hora_final = %s WHERE idSesion = %s"
+            cursor.execute(query, (duracion, self.hora_final, self.idSesion))
             cnx.commit()
-            
+        
         else:
+            # Al iniciar el entrenamiento
             self.cronometro_activo = True
             self.tiempo_inicial = int(time.time())
             self.hora_inicio = time.strftime("%H:%M:%S", time.localtime())
-            print(f"Hora inicio: {self.hora_inicio}")
+            
+            # Obtener el siguiente idSesionUsuario para este usuario
+            cursor = cnx.cursor()
+            cursor.execute("SELECT IFNULL(MAX(idSesionUsuario), 0) + 1 FROM entrenamientos WHERE idUsers = %s", (self.userLogeado,))
+            next_idSesionUsuario = cursor.fetchone()[0]  # Obtiene el siguiente idSesionUsuario
+            
+            # Insertar una nueva sesión en la tabla 'entrenamientos' y obtener el idSesion
+            query = "INSERT INTO entrenamientos (idUsers, idSesionUsuario, duracion, hora_inicio, hora_final) VALUES (%s, %s, %s, %s, %s)"
+            cursor.execute(query, (self.userLogeado, next_idSesionUsuario, 0, self.hora_inicio, None))
+            cnx.commit()
+            
+            # Obtener el idSesion generado automáticamente
+            cursor.execute("SELECT LAST_INSERT_ID();")
+            self.idSesion = cursor.fetchone()[0]
+            print(f"Sesion iniciada con idSesion: {self.idSesion}, idSesionUsuario: {next_idSesionUsuario}")
+
             self.actualizar_cronometro()
             self.mostrar_camara()
-
     def duracion(self):
         tiempo_actual = int(time.time())
         duracion = tiempo_actual - self.tiempo_inicial
@@ -185,6 +204,16 @@ class ReconocimientoFacialApp:
                 # Mostrar la clase detectada en el frame
                 cv2.putText(frame, f'{body_language_class} ({max(body_language_prob):.2f})', (10, 50),
                             cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
+                print (body_language_class + " "+ "emocion")
+
+                if self.idSesion is not None:
+                    cursor = cnx.cursor()
+                    insertaremocion = "INSERT INTO emociones (idSesion, idUsers, emocion) VALUES (%s, %s, %s)"
+                    cursor.execute(insertaremocion, (self.idSesion, self.userLogeado, body_language_class))
+                    cnx.commit()
+
+
+            
             except Exception as e:
                 print(f"Error procesando las landmarks: {e}")
 

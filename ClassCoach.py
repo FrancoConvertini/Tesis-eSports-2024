@@ -84,14 +84,14 @@ class CoachApp:
             y_position2 = base_y_position2 + (index * y_increment)
 
             # Generar la imagen en la posición adecuada
-            image = PhotoImage(file=relative_to_assets("RectanguloNegro.png"))
+            image = PhotoImage(file=relative_to_assets("RectanguloNegroPerfil.png"))
             self.canvas.create_image(873.0, y_position, image=image)
 
             # Agregar la imagen a la lista para que no desaparezca
             self.image_references.append(image)
 
             # Generar el texto sobre la imagen
-            self.canvas.create_text(873.0, y_position - 30, text=f"Usuario: {session['idUsers']}", fill="white", font=("Roboto", 18, "bold"))
+            self.canvas.create_text(873.0, y_position - 5, text=f"{session['idUsers']}", fill="white", font=("Roboto", 16, "bold"))
 
             # Crear el botón "Detalles" para cada imagen
             button_image = PhotoImage(file=relative_to_assets("Detalles.png"))
@@ -130,8 +130,8 @@ class CoachApp:
         self.image_image_3 = PhotoImage(file=relative_to_assets("CuadradoMedio.png"))
         self.canvas.create_image(872.0, 512.0, image=self.image_image_3)
 
-        self.image_image_4 = PhotoImage(file=relative_to_assets("Ojo.png"))
-        self.canvas.create_image(173.0, 110.0, image=self.image_image_4)
+        self.image_image_4 = PhotoImage(file=relative_to_assets("logo.png"))
+        self.canvas.create_image(173.0, 162.0, image=self.image_image_4)
 
 
         self.image_image_13 = PhotoImage(file=relative_to_assets("Team.png"))
