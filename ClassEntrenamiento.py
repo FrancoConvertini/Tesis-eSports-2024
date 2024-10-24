@@ -1,6 +1,6 @@
 from pathlib import Path
 import subprocess
-from tkinter import Label, Tk, Canvas, Button, PhotoImage
+from tkinter import Label, Tk, Canvas, Button, PhotoImage, messagebox, Toplevel
 import cv2  # Add this line to import the cv2 module
 from PIL import Image, ImageTk
 import time
@@ -12,6 +12,7 @@ import os
 import numpy as np
 import pickle
 import pandas as pd
+import threading
 
 OUTPUT_PATH = Path(__file__).parent
 ASSETS_PATH = OUTPUT_PATH / "assets"
@@ -151,6 +152,45 @@ class ReconocimientoFacialApp:
 
             self.actualizar_cronometro()
             self.mostrar_camara()
+            # Iniciar el temporizador para mostrar la advertencia después de 10 segundos
+            self.advertencia_activa = True
+            self.iniciar_advertencia_recurrente()
+
+    def iniciar_advertencia_recurrente(self):
+        if self.advertencia_activa:
+            threading.Timer(10, self.mostrar_mensaje_advertencia).start()
+    def mostrar_mensaje_advertencia(self):
+        # Crear una ventana Toplevel
+        advertencia_window = Toplevel(self.root)
+        advertencia_window.title("Advertencia")
+        advertencia_window.geometry("500x250")
+        advertencia_window.configure(bg="#E3E3E3")
+
+        # Etiqueta para el título de advertencia
+        title_label = Label(advertencia_window, text="Advertencia", bg="#E3E3E3", fg="#413A43", font=("Inter", 20, "bold"))
+        title_label.pack(pady=10)
+
+        # Etiqueta para el texto de advertencia
+        label = Label(advertencia_window, text="Estuviste entrenando por 10 segundos sin descanso, se recomienda descansar la vista para evitar bajo rendimiento", bg="#E3E3E3", fg="#413A43", font=("Roboto", 12), wraplength=480, justify="left")
+        label.pack(pady=20)
+
+        # Botón para cerrar la ventana
+        button = Button(advertencia_window, text="Cerrar", command=lambda: self.cerrar_advertencia(advertencia_window), bg="#413A43", fg="#FFFFFF", font=("Roboto", 10, "bold"))
+        button.pack(pady=10)
+
+        # Cerrar la ventana automáticamente después de 20 segundos
+        advertencia_window.after(10000, lambda: self.cerrar_advertencia(advertencia_window))
+
+    def cerrar_advertencia(self, advertencia_window):
+        advertencia_window.destroy()
+        # Iniciar el temporizador para mostrar la siguiente advertencia después de 10 segundos
+        if self.advertencia_activa:
+            self.root.after(5000, self.iniciar_advertencia_recurrente)
+        
+
+
+
+   
     def duracion(self):
         tiempo_actual = int(time.time())
         duracion = tiempo_actual - self.tiempo_inicial
@@ -207,9 +247,11 @@ class ReconocimientoFacialApp:
                 print (body_language_class + " "+ "emocion")
 
                 if self.idSesion is not None:
+                    tiempo_actual = int(time.time())
+                    tiempo_segundos = tiempo_actual - self.tiempo_inicial
                     cursor = cnx.cursor()
-                    insertaremocion = "INSERT INTO emociones (idSesion, idUsers, emocion) VALUES (%s, %s, %s)"
-                    cursor.execute(insertaremocion, (self.idSesion, self.userLogeado, body_language_class))
+                    insertaremocion = "INSERT INTO emociones (idSesion, idUsers, emocion, tiempo_segundos) VALUES (%s, %s, %s, %s)"
+                    cursor.execute(insertaremocion, (self.idSesion, self.userLogeado, body_language_class, tiempo_segundos))
                     cnx.commit()
 
 

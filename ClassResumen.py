@@ -6,6 +6,10 @@ import numpy as np
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 import sys
+import mysql.connector
+from fpdf import FPDF
+import os
+
 OUTPUT_PATH = Path(__file__).parent
 ASSETS_PATH = OUTPUT_PATH / "assets_resumen"
 
@@ -13,14 +17,20 @@ def relative_to_assets(path: str) -> Path:
     return ASSETS_PATH / Path(path)
 
 class EmocionesApp:
-    def __init__(self, root, idSesionUsuario):
+    def __init__(self, root, idSesion, duracion, hora_inicio, hora_fin):
         self.root = root
         self.root.geometry("1440x1024")
         self.root.configure(bg="#2E0935")
         self.canvas = Canvas(self.root, bg="#2E0935", height=1024, width=1440, bd=0, highlightthickness=0, relief="ridge")
         self.canvas.place(x=0, y=0)
-        self.idSesionUsuario = idSesionUsuario
-        print("idSesionUsuario recibido", idSesionUsuario)
+        self.idSesion = idSesion
+        self.duracion = duracion
+        self.hora_inicio = hora_inicio
+        self.hora_fin = hora_fin
+        print("idSesionUsuario recibido", idSesion)
+        print("idSesionUsuario recibido", duracion)
+        print(hora_inicio)
+        print(hora_fin)
         # Cargar imágenes y botones
         self.load_images()
         self.create_buttons()
@@ -28,12 +38,14 @@ class EmocionesApp:
         # Crear gráficos
         self.create_tiempo_label()
         self.create_line_graph()
-        self.create_bar_graph()
+        self.create_bar_graph(int(self.duracion))
         # Crear el label de emoción
         self.create_emotion_label()
 
         self.root.resizable(False, False)
-    
+        self.cursor = self.connection.cursor()
+
+       
     def load_images(self):
         """Carga las imágenes de la interfaz."""
         self.images = {
@@ -84,7 +96,6 @@ class EmocionesApp:
         self.canvas.create_image(1080.0, 199.0, image=self.images["image_16"]) # Adjusted position for image_16
         self.canvas.create_image(439.0, 684.0, image=self.images["image_17"])  # Adjusted position for image_17
         self.canvas.create_image(1283.0, 90.0, image=self.images["image_18"])  # Adjusted position for image_18
-        self.canvas.create_image(1183.0, 90.0, image=self.images["image_19"])  # Adjusted position for image_19
         self.canvas.create_image(434.0, 342.0, image=self.images["image_20"])  # Adjusted position for image_20
         self.canvas.create_image(961.0, 200.0, image=self.images["image_21"])   # Adjusted position for image_21
 
@@ -106,9 +117,126 @@ class EmocionesApp:
                                command=lambda: print("Button 4 clicked"))
         self.button_4.place(x=142.0, y=912.0, width=60, height=67)
 
+
+        self.image_19 = Button(image=self.images["image_19"], borderwidth=0, highlightthickness=0, relief="flat",
+                               command=lambda: self.generate_pdf())
+        self.image_19.place(x=1183.0, y=60.0)
+    
+
+
+    def generate_pdf(self):
+        """Genera un archivo PDF con los datos emocionales y la duración."""
+        # Crear el PDF
+        pdf = FPDF()
+        pdf.add_page()
+
+        # Título del documento
+        pdf.set_font("Arial", 'B', 16)
+        pdf.cell(200, 10, "Resumen de Sesión de Emociones", ln=True, align='C')
+
+        # Agregar ID de sesión y duración
+        pdf.set_font("Arial", size=12)
+        pdf.cell(200, 10, f"ID de Sesión: {self.idSesion}", ln=True)
+        pdf.cell(200, 10, f"Duración: {self.duracion} segundos", ln=True)
+
+        # Agregar la emoción principal
+        pdf.cell(200, 10, f"Emoción predominante: {self.get_emotion_dominant()}", ln=True)
+
+        # Agregar conteo de emociones (si tienes los datos ya calculados)
+        emociones = ['Concentración', 'Feliz', 'Frustración', 'Calma', 'Enojado', 'Estresado', 'Neutral']
+        pdf.cell(200, 10, "Conteo de Emociones:", ln=True)
+        conteos_emociones = self.get_emotion_counts()
+        for emocion, conteo in conteos_emociones.items():
+            pdf.cell(200, 10, f"{emocion}: {conteo}", ln=True)
+
+        # Detectar hábitos perjudiciales y agregar recomendaciones
+        habitos_perjudiciales = self.detect_habitos_perjudiciales(conteos_emociones, self.hora_inicio, self.hora_fin, self.duracion)
+        pdf.cell(200, 10, "Hábitos Perjudiciales Detectados:", ln=True)
+        for habito in habitos_perjudiciales:
+            pdf.cell(200, 10, f"- {habito}", ln=True)
+
+        recomendaciones = self.get_recomendaciones(habitos_perjudiciales)
+        pdf.cell(200, 10, "Recomendaciones:", ln=True)
+        for recomendacion in recomendaciones:
+            pdf.cell(200, 10, f"- {recomendacion}", ln=True)
+
+        # Guardar el PDF en una ruta local
+        file_path = os.path.join(os.getcwd(), f"resumen_sesion_{self.idSesion}.pdf")
+        pdf.output(file_path)
+
+        # Notificar al usuario que el archivo fue guardado
+        print(f"Archivo PDF generado: {file_path}")
+
+    def detect_habitos_perjudiciales(self, conteos_emociones, hora_inicio, hora_fin, duracion):
+        """Detecta hábitos perjudiciales basados en los conteos de emociones y otros parámetros."""
+        habitos = []
+        if conteos_emociones['Estresado'] > 10:
+            habitos.append("Alto nivel de estrés")
+        if conteos_emociones['Enojado'] > 5:
+            habitos.append("Frecuentes episodios de enojo")
+        # Agrega más detecciones según sea necesario
+        
+        # Detectar hábitos basados en hora_inicio, hora_fin y duracion
+        hora_inicio_h = int(hora_inicio.split(':')[0])
+        print(hora_inicio_h)
+        hora_fin_h = int(hora_fin.split(':')[0])
+        if hora_inicio_h < 6 or hora_inicio_h > 19:
+            habitos.append("Sesión iniciada en horario nocturno")
+        if hora_fin_h < 6 or hora_fin_h > 20:
+            habitos.append("Sesión finalizada en horario nocturno")
+        if int(duracion) > 10:  # 8 hours in seconds
+            habitos.append("Duración de sesión excesiva")
+
+        return habitos
+
+    def get_recomendaciones(self, habitos_perjudiciales):
+        """Genera recomendaciones basadas en los hábitos perjudiciales detectados."""
+        recomendaciones = []
+        if "Alto nivel de estrés" in habitos_perjudiciales:
+            recomendaciones.append("Practicar técnicas de relajación como la meditación.")
+        if "Frecuentes episodios de enojo" in habitos_perjudiciales:
+            recomendaciones.append("Realizar actividades físicas para liberar tensiones.")
+        if "Sesión iniciada en horario inusual" in habitos_perjudiciales:
+            recomendaciones.append("Evitar entrenar en horarios nocturnos")
+        if "Sesión finalizada en horario inusual" in habitos_perjudiciales:
+            recomendaciones.append("Evitar entrenar en horarios nocturnos.")
+        if "Duración de sesión excesiva" in habitos_perjudiciales:
+            recomendaciones.append("Reducir la duración de las sesiones para evitar fatiga.")
+
+        return recomendaciones
+    def get_emotion_dominant(self):
+        """Obtiene la emoción que duró más tiempo."""
+        # Calcula la emoción predominante (la lógica ya está en tu código)
+        emociones = ['Concentración', 'Feliz', 'Frustración', 'Calma', 'Enojado', 'Estresado', 'Neutral']
+        self.cursor.execute("SELECT emocion FROM emociones WHERE idSesion = %s", (self.idSesion,))
+        emociones2 = self.cursor.fetchall()
+        conteos_emociones = {emocion: 0 for emocion in emociones}
+        
+        for emocion in emociones2:
+            emocion_str = emocion[0]  # Obtener el valor de la emoción
+            if emocion_str in conteos_emociones:
+                conteos_emociones[emocion_str] += 1
+        
+        emocion_max_tiempo = max(conteos_emociones, key=conteos_emociones.get)
+        return emocion_max_tiempo
+
+    def get_emotion_counts(self):
+        """Obtiene los conteos de cada emoción para incluirlos en el PDF."""
+        emociones = ['Concentración', 'Feliz', 'Frustración', 'Calma', 'Enojado', 'Estresado', 'Neutral']
+        self.cursor.execute("SELECT emocion FROM emociones WHERE idSesion = %s", (self.idSesion,))
+        emociones2 = self.cursor.fetchall()
+        conteos_emociones = {emocion: 0 for emocion in emociones}
+        
+        for emocion in emociones2:
+            emocion_str = emocion[0]  # Obtener el valor de la emoción
+            if emocion_str in conteos_emociones:
+                conteos_emociones[emocion_str] += 1
+                
+        return conteos_emociones
+
     def create_tiempo_label(self):
         """Crea un label para mostrar el tiempo formateado aleatoriamente."""
-        tiempo_total_segundos = random.randint(10800, 28800)  # 3 a 8 horas en segundos
+        tiempo_total_segundos = int(self.duracion) # 3 a 8 horas en segundos
         horas = tiempo_total_segundos // 3600
         minutos = (tiempo_total_segundos % 3600) // 60
         segundos = tiempo_total_segundos % 60
@@ -121,18 +249,63 @@ class EmocionesApp:
     def create_emotion_label(self):
         """Crea un label para mostrar la emoción asociada al tiempo más alto."""
         emociones = ['Concentración', 'Feliz', 'Frustración', 'Calma', 'Enojado', 'Estresado', 'Neutral']
-        tiempo_total_emociones = [random.randint(10, 60) for _ in emociones]
-        indice_max_tiempo = tiempo_total_emociones.index(max(tiempo_total_emociones))
-        emocion_max_tiempo = emociones[indice_max_tiempo]
+        self.connection = mysql.connector.connect(
+            #host="database-1.cluster-c8t9myimiwmo.us-east-1.rds.amazonaws.com",
+            #user="admin",
+            #passwd="asdasd123",
+            #database="tesis2024",
+            host="localhost",
+            user="root",
+            passwd="1234",
+            database="tesis2024",
+            auth_plugin='mysql_native_password'
+        )
+        self.cursor = self.connection.cursor()
+        self.cursor.execute("SELECT emocion FROM emociones WHERE idSesion = %s", (self.idSesion,))
+        emociones2 = self.cursor.fetchall()
+        conteos_emociones = {emocion: 0 for emocion in emociones}
+    
+    # Recorrer la lista emociones2 y actualizar el diccionario de conteos
+        for emocion in emociones2:
+            emocion_str = emocion[0]  # Obtener el valor de la emoción
+            if emocion_str in conteos_emociones:
+                conteos_emociones[emocion_str] += 1
+        print(conteos_emociones)
 
+        emocion_max_tiempo = max(conteos_emociones, key=conteos_emociones.get)
+    
         label_emocion = Label(self.root, text=emocion_max_tiempo, bg="#413A43", fg="white", font=("Arial", 24))
         label_emocion.place(x=1125, y=243, anchor="center")
         print(f'La emoción asociada al tiempo más alto es: {emocion_max_tiempo}')
 
     def create_line_graph(self):
         """Crea un gráfico de líneas para visualizar las emociones a lo largo del tiempo."""
-        tiempo = np.linspace(0, 60, 7)  # Intervalos de 10 minutos
-        emociones_num = [random.randint(0, 6) for _ in range(len(tiempo))]
+        self.connection = mysql.connector.connect(
+            #host="database-1.cluster-c8t9myimiwmo.us-east-1.rds.amazonaws.com",
+            #user="admin",
+            #passwd="asdasd123",
+            #database="tesis2024",
+            host="localhost",
+            user="root",
+            passwd="1234",
+            database="tesis2024",
+            auth_plugin='mysql_native_password'
+        )
+        self.cursor = self.connection.cursor()
+        self.cursor.execute("SELECT emocion, tiempo_segundos FROM emociones WHERE idSesion = %s", (self.idSesion,))
+        emociones2 = self.cursor.fetchall()
+        print(emociones2)
+
+        # Extraer los tiempos y las emociones, filtrando valores None
+        tiempos = [int(row[1]) for row in emociones2 if row[1] is not None]
+    
+        emociones = [row[0] for row in emociones2 if row[1] is not None]
+
+        # Convertir las emociones a valores numéricos
+        emociones_dict = {
+            'Estresado': 0, 'Enojado': 1, 'Frustración': 2, 'Neutral': 3, 'Calma': 4, 'Feliz': 5, 'Concentración': 6
+        }
+        emociones_num = [emociones_dict[emocion] for emocion in emociones]
 
         frame_grafico = Frame(self.root, bg="white", width=800, height=400)
         frame_grafico.place(x=453, y=356)
@@ -142,12 +315,15 @@ class EmocionesApp:
         ax = fig.add_subplot(111)
         ax.set_facecolor('#413A43')
 
-        ax.plot(tiempo, emociones_num, marker='o', linestyle='-', color='green')
+        ax.plot(tiempos, emociones_num, marker='o', linestyle='-', color='green')
         ax.set_yticks([0, 1, 2, 3, 4, 5, 6])
         ax.set_yticklabels(['Estresado', 'Enojado', 'Frustración', 'Neutral', 'Calma', 'Feliz', 'Concentración'])
         ax.tick_params(axis='both', which='major', labelsize=8, colors='white')
-        ax.set_xticks(np.arange(0, 61, 10))
-        ax.set_xlabel('Tiempo (minutos)', color='white')
+        
+        # Ajustar los ticks del eje x para que se muestren en intervalos de 10 segundos
+        max_tiempo = max(tiempos) if tiempos else 60  # Manejar el caso donde tiempos esté vacío
+        ax.set_xticks(np.arange(0, max_tiempo + 1, 10))
+        ax.set_xlabel('Tiempo (segundos)', color='white')
         ax.set_ylabel('Emociones', color='white')
         ax.grid(True, axis='y', linestyle='--', alpha=0.7)
 
@@ -155,10 +331,36 @@ class EmocionesApp:
         canvas_grafico.draw()
         canvas_grafico.get_tk_widget().pack(fill=tk.BOTH, expand=True)
 
-    def create_bar_graph(self):
+    def create_bar_graph(self, duracion):
         """Crea un gráfico de barras para mostrar el tiempo total de cada emoción."""
         emociones = ['Concentración', 'Feliz', 'Frustración', 'Calma', 'Enojado', 'Estresado', 'Neutral']
-        tiempo_total_emociones = [random.randint(10, 60) for _ in emociones]
+        self.duracion = duracion
+    
+        self.connection = mysql.connector.connect(
+            #host="database-1.cluster-c8t9myimiwmo.us-east-1.rds.amazonaws.com",
+            #user="admin",
+            #passwd="asdasd123",
+            #database="tesis2024",
+            host="localhost",
+            user="root",
+            passwd="1234",
+            database="tesis2024",
+            auth_plugin='mysql_native_password'
+        )
+        
+        self.cursor = self.connection.cursor()
+        self.cursor.execute("SELECT emocion FROM emociones WHERE idSesion = %s", (self.idSesion,))
+        emociones2 = self.cursor.fetchall()
+        conteos_emociones = {emocion: 0 for emocion in emociones}
+    
+    # Recorrer la lista emociones2 y actualizar el diccionario de conteos
+        for emocion in emociones2:
+            emocion_str = emocion[0]  # Obtener el valor de la emoción
+            if emocion_str in conteos_emociones:
+                conteos_emociones[emocion_str] += 1
+    
+        tiempo_total_emociones = [(conteos_emociones[emocion] / len(emociones2)) * self.duracion for emocion in emociones]
+        
         colores_barras = ['blue', 'green', 'red', 'purple', 'orange', 'pink', 'cyan']
 
         frame_barras = Frame(self.root, bg="white", width=800, height=400)
@@ -182,8 +384,14 @@ if __name__ == "__main__":
     # Recuperar el argumento de línea de comando
     if len(sys.argv) > 1:
         idSesionUsuario = sys.argv[1]
+        duracion = sys.argv[2]
+        hora_inicio = sys.argv[3]
+        hora_fin = sys.argv[4]
     else:
         idSesionUsuario = None  # Manejo de error si no se pasa un argumento
+        duracion = None
+        hora_inicio = None
+        hora_fin = None
 
-    app = EmocionesApp(root, idSesionUsuario)
+    app = EmocionesApp(root, idSesionUsuario, duracion, hora_inicio, hora_fin)
     root.mainloop()

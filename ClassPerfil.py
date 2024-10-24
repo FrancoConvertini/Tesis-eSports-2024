@@ -3,7 +3,8 @@ from tkinter import Tk, Canvas, Button, PhotoImage, Scrollbar, Frame, Label, Top
 import mysql.connector
 import os
 import subprocess
-
+from tkinter import messagebox
+from datetime import datetime
 OUTPUT_PATH = Path(__file__).parent
 ASSETS_PATH = OUTPUT_PATH / "assets"
 
@@ -97,7 +98,8 @@ class PerfilApp:
                     'hora_fin': row[1],
                     'duracion': row[2],
                     'idSesion': row[3],
-                    'idSesionUsuario': row[4]
+                    'idSesionUsuario': row[4],
+                    
                 })
             
         return session_data    
@@ -255,8 +257,8 @@ class PerfilApp:
 
     
 
-    def navigate_to_resumen(self, idSesionUsuario):
-        subprocess.run(['python', 'ClassResumen.py', str(idSesionUsuario)])
+    def navigate_to_resumen(self, idSesion, duracion, hora_inicio, hora_fin):
+        subprocess.run(['python', 'ClassResumen.py', str(idSesion), str(duracion), str(hora_inicio), str(hora_fin)])
 
     def create_button_command(self, session_name):
         return lambda: print(f"Nombre de la sesión: {session_name}")
@@ -290,11 +292,55 @@ class PerfilApp:
 
             # Generar botones
             idSesionUsuario = session['idSesionUsuario']
-            print("idSesionUsuario: ", idSesionUsuario)
+            idSesion = session['idSesion']
+            duracion=session['duracion']
+            hora_inicio=session['hora_inicio']
+            hora_fin=session['hora_fin']
+            print("idSesionUsuario: "+ str(idSesionUsuario) + "idSesion: "+ str(idSesion))
+            print ("hora fin"+ session['hora_fin'])
             button_image_6 = PhotoImage(file=relative_to_assets("Detalles.png"))
-            button_6 = Button(self.inner_canvas, image=button_image_6, borderwidth=0, highlightthickness=0,  command=lambda idSesionUsuario=idSesionUsuario: self.navigate_to_resumen(idSesionUsuario), relief="flat")
+            button_6 = Button(self.inner_canvas, image=button_image_6, borderwidth=0, highlightthickness=0,  command=lambda idSesion=idSesion, duracion=duracion, hora_inicio=hora_inicio, hora_fin=hora_fin: self.navigate_to_resumen(idSesion, duracion, hora_inicio, hora_fin), relief="flat")
             self.inner_canvas.create_window(830, y_position + 8, anchor="nw", window=button_6, width=154.0, height=46.0)
             self.inner_canvas.images.append(button_image_6)
+            
+            advertencias = []
+            if int(duracion) > 10:
+                advertencias.append(f"¡Cuidado la duración de la sesión fue de: {duracion} segundos!, se recomienda no exceder los 10 segundos sin tomar un descanso.") 
+            try:
+                hora_fin_dt = datetime.strptime(hora_fin, "%H:%M:%S").time()
+                if hora_fin_dt >= datetime.strptime("00:00:00", "%H:%M:%S").time() and hora_fin_dt <= datetime.strptime("20:00:00", "%H:%M:%S").time():
+                    advertencias.append(f"¡Advertencia la hora de fin de sesión fue a las: {hora_fin}!, se recomienda no entrenar en horarios nocturnos para no exigir la vista.")
+            except ValueError:
+                print(f"Formato de hora inválido: {hora_fin}")
+
+            if advertencias:
+                advertencia_texto = "\n\n".join(advertencias)
+                button_image_warning = PhotoImage(file=relative_to_assets("warning2.png"))
+                button_warning = Button(self.inner_canvas, image=button_image_warning, borderwidth=0, highlightthickness=0, command=lambda texto=advertencia_texto: self.mostrar_mensaje_advertencia(texto), relief="flat")
+                self.inner_canvas.create_window(700, y_position + 8, anchor="nw", window=button_warning, width=46, height=46)
+                self.inner_canvas.images.append(button_image_warning)
+
+    def mostrar_mensaje_advertencia(self, texto):
+    # Crear una ventana Toplevel
+        advertencia_window = Toplevel(self.root)
+        advertencia_window.overrideredirect(True) 
+        advertencia_window.geometry(f"500x250+{1020}+{80}")
+        advertencia_window.configure(bg="#413A43")
+
+        # Etiqueta para el título de advertencia
+        title_label = Label(advertencia_window, text="Advertencia", bg="#413A43", fg="#FFFFFF", font=("Inter", 20, "bold"))
+        title_label.pack(pady=10)
+
+        # Etiqueta para el texto de advertencia
+        label = Label(advertencia_window, text=texto, bg="#413A43", fg="#FFFFFF", font=("Roboto", 12), wraplength=480, justify="left")
+        label.pack(pady=20)
+
+        # Botón para cerrar la ventana
+        button = Button(advertencia_window, text="Cerrar", command=advertencia_window.destroy, bg="#FFFFFF", fg="#413A43", font=("Roboto", 10, "bold"))
+        button.pack(pady=10)
+
+        # Cerrar la ventana automáticamente después de 20 segundos
+        advertencia_window.after(20000, advertencia_window.destroy)
 
     def adjust_inner_canvas_size(self, event):
         self.inner_canvas.configure(scrollregion=self.inner_canvas.bbox("all"))
