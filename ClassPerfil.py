@@ -27,6 +27,7 @@ class PerfilApp:
         self.partidas=3
         self.contador = 0
         self.show_button_3 = True
+        self.show_button_2 = True
         self.userLogeado=userLogeado
         self.userPerfil=userPerfil
         print("en perfil con userLogeado: ", userLogeado, " y userPerfil: ", userPerfil)
@@ -52,19 +53,29 @@ class PerfilApp:
         query = "SELECT name, equipo, edad, videojuego, rol FROM users WHERE idUsers = %s"
         cursor.execute(query, (idUser,))
         resultado = cursor.fetchone()
-        self.nombre = resultado[0]
-        self.equipo = resultado[1]
-        self.edad = resultado[2]
-        self.videojuego = resultado[3]
         rol= resultado[4]
         if rol=="Player":
+            self.nombre = resultado[0]
+            self.equipo = resultado[1]
+            self.edad = resultado[2]
+            self.videojuego = resultado[3]
             print("dentro del if con idUser2", idUser)
             self.show_button_3 = False
             self.setup_ui()
             self.generate_image(idUser)
             
         else:
+            cursor = cnx.cursor()
+            idUser = userPerfil
+            query = "SELECT name, equipo, edad, videojuego, rol FROM users WHERE idUsers = %s"
+            cursor.execute(query, (idUser,))
+            resultado2 = cursor.fetchone()
+            self.nombre = resultado2[0]
+            self.equipo = resultado2[1]
+            self.edad = resultado2[2]
+            self.videojuego = resultado2[3]
             print("dentro del if", userPerfil)
+            self.show_button_2 = False
             self.setup_ui()
             self.generate_image(userPerfil)
            
@@ -215,10 +226,10 @@ class PerfilApp:
         self.button_image_1 = PhotoImage(file=relative_to_assets("Perfil.png"))
         self.button_1 = Button(image=self.button_image_1, borderwidth=0, highlightthickness=0, command=self.generate_image, relief="flat")
         self.button_1.place(x=81.0, y=349.0, width=183.9990234375, height=59.13140869140625)
-
-        self.button_image_2 = PhotoImage(file=relative_to_assets("Entrenar.png"))
-        self.button_2 = Button(image=self.button_image_2, borderwidth=0, highlightthickness=0, command=lambda: self.switch_to_entrenamiento (self.userLogeado, self.userPerfil), relief="flat")
-        self.button_2.place(x=81.0, y=428.0, width=183.9990234375, height=59.13140869140625)
+        if self.show_button_2==True:
+            self.button_image_2 = PhotoImage(file=relative_to_assets("Entrenar.png"))
+            self.button_2 = Button(image=self.button_image_2, borderwidth=0, highlightthickness=0, command=lambda: self.switch_to_entrenamiento (self.userLogeado, self.userPerfil), relief="flat")
+            self.button_2.place(x=81.0, y=428.0, width=183.9990234375, height=59.13140869140625)
 
         if self.show_button_3==True:
             self.button_image_3 = PhotoImage(file=relative_to_assets("MiEquipo.png"))
@@ -308,7 +319,7 @@ class PerfilApp:
                 advertencias.append(f"¡Cuidado la duración de la sesión fue de: {duracion} segundos!, se recomienda no exceder los 10 segundos sin tomar un descanso.") 
             try:
                 hora_fin_dt = datetime.strptime(hora_fin, "%H:%M:%S").time()
-                if hora_fin_dt >= datetime.strptime("00:00:00", "%H:%M:%S").time() and hora_fin_dt <= datetime.strptime("20:00:00", "%H:%M:%S").time():
+                if hora_fin_dt >= datetime.strptime("20:00:00", "%H:%M:%S").time() and hora_fin_dt <= datetime.strptime("23:00:00", "%H:%M:%S").time():
                     advertencias.append(f"¡Advertencia la hora de fin de sesión fue a las: {hora_fin}!, se recomienda no entrenar en horarios nocturnos para no exigir la vista.")
             except ValueError:
                 print(f"Formato de hora inválido: {hora_fin}")

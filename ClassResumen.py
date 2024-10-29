@@ -248,7 +248,7 @@ class EmocionesApp:
 
     def create_emotion_label(self):
         """Crea un label para mostrar la emoción asociada al tiempo más alto."""
-        emociones = ['Concentración', 'Feliz', 'Frustración', 'Calma', 'Enojado', 'Estresado', 'Neutral']
+        emociones = ['Concentración', 'Feliz', 'Frustración', 'Calma', 'Enojado', 'Estresado', 'Neutral', 'Cansado']
         self.connection = mysql.connector.connect(
             #host="database-1.cluster-c8t9myimiwmo.us-east-1.rds.amazonaws.com",
             #user="admin",
@@ -303,7 +303,7 @@ class EmocionesApp:
 
         # Convertir las emociones a valores numéricos
         emociones_dict = {
-            'Estresado': 0, 'Enojado': 1, 'Frustración': 2, 'Neutral': 3, 'Calma': 4, 'Feliz': 5, 'Concentración': 6
+            'Estresado': 0, 'Enojado': 1, 'Frustración': 2, 'Neutral': 3, 'Calma': 4, 'Feliz': 5, 'Concentración': 6, 'Cansado': 7
         }
         emociones_num = [emociones_dict[emocion] for emocion in emociones]
 
@@ -316,8 +316,8 @@ class EmocionesApp:
         ax.set_facecolor('#413A43')
 
         ax.plot(tiempos, emociones_num, marker='o', linestyle='-', color='green')
-        ax.set_yticks([0, 1, 2, 3, 4, 5, 6])
-        ax.set_yticklabels(['Estresado', 'Enojado', 'Frustración', 'Neutral', 'Calma', 'Feliz', 'Concentración'])
+        ax.set_yticks([0, 1, 2, 3, 4, 5, 6, 7])
+        ax.set_yticklabels(['Estresado', 'Enojado', 'Frustración', 'Neutral', 'Calma', 'Feliz', 'Concentración', 'Cansado'])
         ax.tick_params(axis='both', which='major', labelsize=8, colors='white')
         
         # Ajustar los ticks del eje x para que se muestren en intervalos de 10 segundos
@@ -333,7 +333,7 @@ class EmocionesApp:
 
     def create_bar_graph(self, duracion):
         """Crea un gráfico de barras para mostrar el tiempo total de cada emoción."""
-        emociones = ['Concentración', 'Feliz', 'Frustración', 'Calma', 'Enojado', 'Estresado', 'Neutral']
+        emociones = ['Concentración', 'Feliz', 'Frustración', 'Calma', 'Enojado', 'Estresado', 'Neutral', 'Cansado']
         self.duracion = duracion
     
         self.connection = mysql.connector.connect(
