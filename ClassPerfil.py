@@ -319,7 +319,7 @@ class PerfilApp:
                 advertencias.append(f"¡Cuidado la duración de la sesión fue de: {duracion} segundos!, se recomienda no exceder los 10 segundos sin tomar un descanso.") 
             try:
                 hora_fin_dt = datetime.strptime(hora_fin, "%H:%M:%S").time()
-                if hora_fin_dt >= datetime.strptime("20:00:00", "%H:%M:%S").time() and hora_fin_dt <= datetime.strptime("23:00:00", "%H:%M:%S").time():
+                if hora_fin_dt >= datetime.strptime("00:00:00", "%H:%M:%S").time() and hora_fin_dt <= datetime.strptime("4:00:00", "%H:%M:%S").time():
                     advertencias.append(f"¡Advertencia la hora de fin de sesión fue a las: {hora_fin}!, se recomienda no entrenar en horarios nocturnos para no exigir la vista.")
             except ValueError:
                 print(f"Formato de hora inválido: {hora_fin}")

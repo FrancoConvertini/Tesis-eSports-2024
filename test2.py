@@ -20,10 +20,7 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_
 
 # Definir pipelines
 pipelines = {
-    'lr': make_pipeline(StandardScaler(), LogisticRegression()),
-    'rc': make_pipeline(StandardScaler(), RidgeClassifier()),
     'rf': make_pipeline(StandardScaler(), RandomForestClassifier()),
-    'gb': make_pipeline(StandardScaler(), GradientBoostingClassifier()),
 }
 
 # Entrenar y evaluar modelos
@@ -39,7 +36,6 @@ for algo, pipeline in pipelines.items():
 # Evaluar modelos en el conjunto de prueba
 for algo, model in fit_models.items():
     yhat = model.predict(X_test)
-    print(f"Model: {algo}")
     print(f"Accuracy: {accuracy_score(y_test, yhat)}")
     print("Confusion Matrix:")
     print(confusion_matrix(y_test, yhat))
