@@ -46,6 +46,10 @@ pip install matplotlib
 
 pip install tkinter
 
+pip install tkhtmlview
+
+pip install powerbiclient
+
 Configura la cámara: Verifica que la cámara esté configurada correctamente y que el puerto de acceso sea el correcto (por defecto, el puerto es 0).Podes cambiarlo en el código si tu cámara está en otro puerto:
 -Extracto del codigo donde se especifica el puerto
     cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)

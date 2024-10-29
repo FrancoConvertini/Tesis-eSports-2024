@@ -85,6 +85,10 @@ class PerfilApp:
     
     def get_session_data(self, idUser):
         cnx = mysql.connector.connect(
+            #host="database-1.cluster-c8t9myimiwmo.us-east-1.rds.amazonaws.com",
+            #user="admin",
+            #passwd="asdasd123",
+            #database="tesis2024",
             host="localhost",
             user="root",
             passwd="1234",
