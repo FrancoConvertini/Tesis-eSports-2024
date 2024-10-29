@@ -79,7 +79,7 @@ with mp_holistic.Holistic(min_detection_confidence=0.5, min_tracking_confidence=
        
         
         
-        class_name = "Estresado"
+        class_name = "Frustracion"
 
         # Export coordinates
         try:

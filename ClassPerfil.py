@@ -258,7 +258,8 @@ class PerfilApp:
     
 
     def navigate_to_resumen(self, idSesion, duracion, hora_inicio, hora_fin):
-        subprocess.run(['python', 'ClassResumen.py', str(idSesion), str(duracion), str(hora_inicio), str(hora_fin)])
+        python_executable = r'.venv\Scripts\python'
+        subprocess.run([python_executable, 'ClassResumen.py', str(idSesion), str(duracion), str(hora_inicio), str(hora_fin)])
 
     def create_button_command(self, session_name):
         return lambda: print(f"Nombre de la sesión: {session_name}")
