@@ -90,5 +90,5 @@ Base de datos:
 Flujo de la aplicacion:
 1) Ejecutar Login.py
 2) En caso de ser jugador o coach habran 2 opciones:
-3) Si se logea con un usuario coach lo primero que vera es la pantalla mi equipo y podra acceder a los datos de los jugadores del equipo
-4) Si se logea con un usuario player podra ver el perfil, generar sesiones de entrenamiento y ver los reportes.
+3) Si se logea con un usuario coach lo primero que vera es la pantalla mi equipo y podra acceder a los datos de los jugadores del equipo. User: coach , Contraeña: 1234
+4) Si se logea con un usuario player podra ver el perfil, generar sesiones de entrenamiento y ver los reportes. User: 1 , Contraseña: 1234
