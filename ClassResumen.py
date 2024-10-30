@@ -272,7 +272,7 @@ class EmocionesApp:
         """Genera recomendaciones basadas en los hábitos perjudiciales detectados."""
         recomendaciones = []
         if "Alto nivel de cansancio" in habitos_perjudiciales:
-            recomendaciones.append("Intentar tomar descansos freucentes para evitar fatiga y dormir 8 horas.")
+            recomendaciones.append("Intentar tomar descansos frecuentes para evitar fatiga y dormir 8 horas.")
         if "Frecuentes episodios de enojo" in habitos_perjudiciales:
             recomendaciones.append("Realizar actividades físicas para liberar tensiones.")
         if "Sesión iniciada en horario nocturno" in habitos_perjudiciales:
